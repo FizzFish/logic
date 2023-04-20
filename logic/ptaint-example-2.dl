@@ -4,7 +4,7 @@
 
 .decl EntryMethod(method:Method)
 
-EntryMethod("<com.bytecodedl.benchmark.demo.TaintDemo3: void test1(java.lang.String)>").
+EntryMethod("<org.apache.commons.text.StringSubstitutor: java.lang.String replace(java.lang.Object)>").
 
 
 ptaint.Reachable(method) :-
@@ -17,16 +17,12 @@ ptaint.VarPointsTo(heap, this) :-
     VarType(this, class),
     heap = cat("Mock::", class).
 
-NormalHeap(heap, class),
-ptaint.TaintHeap(insn, taintHeap),
-ptaint.VarPointsTo(heap, param),
+ptaint.TaintHeap(taintHeap, class),
 ptaint.VarPointsTo(taintHeap, param) :-
     EntryMethod(method),
     FormalParam(_, method, param),
     VarType(param, class),
-    heap = cat("Mock::", class),
-    taintHeap = cat("NewTainted::", class),
-    insn = "Init::Param".
+    taintHeap = cat("NewTainted::", "Init::Param").
 
 
 ptaint.SourceMethod("<com.bytecodedl.benchmark.demo.TaintDemo3: java.lang.String Source()>").
@@ -40,14 +36,13 @@ ptaint.ArgToRetTransfer("<java.lang.StringBuilder: java.lang.StringBuilder appen
 ptaint.SanitizeMethod("<com.bytecodedl.benchmark.demo.TaintDemo3: java.lang.String Sanitize(java.lang.String)>").
 
 
-.decl TaintVar(var:Var)
+.decl TaintVar(var:Var, heap:Heap)
 
-TaintVar(var) :-
+TaintVar(var, heap) :-
     ptaint.VarPointsTo(heap, var),
-    ptaint.TaintHeap(_, heap).
+    ptaint.TaintHeap(heap, _).
 
 .output TaintVar
 
 .output ptaint.TaintHeap
-.output ptaint.TransferTaint
 .output ptaint.VarPointsTo

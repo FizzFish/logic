@@ -3,7 +3,7 @@
 
 .comp PTaint : ContextInsensitivePt{
 
-    .decl TaintHeap(insn:Insn, heap:Heap)
+    .decl TaintHeap(heap:Heap, class:Class)
     .decl SourceMethod(method:Method)
     .decl SinkMethod(method:Method, n:number)
 
@@ -24,7 +24,7 @@
             OVCallGraph(insn,_,method)
         ),
         VarPointsTo(heap, arg),
-        TaintHeap(_, heap).
+        TaintHeap(heap, _).
 
     // taint arg to param
     VarPointsTo(heap, param) :-
@@ -32,15 +32,16 @@
         ActualParam(n, insn, arg),
         FormalParam(n, callee, param),
         VarPointsTo(heap, arg),
-        TaintHeap(_, heap),
+        TaintHeap(heap, _),
         !SanitizeMethod(callee).
     
     
-    TaintHeap(insn, heap),
+    TaintHeap(heap, class),
     VarPointsTo(heap, to) :-
         SourceMethod(callee),
         CallGraph(insn, _, callee),
         AssignReturnValue(insn, to),
+        VarType(to, class),
         heap = cat("NewTainted::", insn).
 
     IsTaintedFrom(insn, base, ret) :-
@@ -64,10 +65,11 @@
         ActualParam(n, insn, arg),
         AssignReturnValue(insn, ret).
 
-    TaintHeap(insn, newHeap),
+    TaintHeap(newHeap, class),
     VarPointsTo(newHeap, to) :-
         IsTaintedFrom(insn, from, to),
         VarPointsTo(heap, from),
-        TaintHeap(_, heap),
+        TaintHeap(heap, _),
+        VarType(to, class),
         newHeap = cat("TransferTaint::", insn).
 }
