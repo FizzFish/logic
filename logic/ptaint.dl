@@ -6,11 +6,14 @@
     .decl TaintHeap(heap:Heap, class:Class)
     .decl SourceMethod(method:Method)
     .decl SinkMethod(method:Method, n:number)
+    .decl TaintTransfer(caller:Method, callee:Method)
 
     .decl SanitizeMethod(method:Method)
 
     .decl BaseToRetTransfer(method:Method)
     .decl ArgToRetTransfer(method:Method, n:number)
+    .decl BaseToArgTransfer(method:Method, n:number)
+    .decl ArgToBaseTransfer(method:Method, n:number)
     .decl IsTaintedFrom(insn:Insn, from:Var, to:Var)
     //.decl TransferTaint(heap:Heap, newHeap:Heap)
     .decl SinkInsn(heap:Heap, insn:Insn)
@@ -27,8 +30,9 @@
         TaintHeap(heap, _).
 
     // taint arg to param
+    TaintTransfer(caller, callee),
     VarPointsTo(heap, param) :-
-        CallGraph(insn, _, callee),
+        CallGraph(insn, caller, callee),
         ActualParam(n, insn, arg),
         FormalParam(n, callee, param),
         VarPointsTo(heap, arg),
@@ -55,7 +59,31 @@
             SpecialMethodInvocation(insn, _, _, base, _)
         ),
         AssignReturnValue(insn, ret).
-    
+
+    IsTaintedFrom(insn, base, arg) :-
+        (
+            CallGraph(insn, _, callee);
+            OVCallGraph(insn, _, callee)
+        ),
+        BaseToArgTransfer(callee, n),
+        ActualParam(n, insn, arg),
+        (
+            VirtualMethodInvocation(insn, _, _, base, _);
+            SpecialMethodInvocation(insn, _, _, base, _)
+        ).
+
+    IsTaintedFrom(insn, arg, base) :-
+        (
+            CallGraph(insn, _, callee);
+            OVCallGraph(insn, _, callee)
+        ),
+        ArgToBaseTransfer(callee, n),
+        ActualParam(n, insn, arg),
+        (
+            VirtualMethodInvocation(insn, _, _, base, _);
+            SpecialMethodInvocation(insn, _, _, base, _)
+        ).
+
     IsTaintedFrom(insn, arg, ret) :-
         (
             CallGraph(insn, _, callee);
@@ -64,7 +92,7 @@
         ArgToRetTransfer(callee, n),
         ActualParam(n, insn, arg),
         AssignReturnValue(insn, ret).
-
+    /**
     TaintHeap(newHeap, class),
     VarPointsTo(newHeap, to) :-
         IsTaintedFrom(insn, from, to),
@@ -72,4 +100,19 @@
         TaintHeap(heap, _),
         VarType(to, class),
         newHeap = cat("TransferTaint::", insn).
+    */
+    /**
+    存在一个问题：
+    1. x = new();y=x;taint(y) 这时显然不应该污染x
+    2. this.buf = new();stack=this.buf;taint(stack) 这时需要污染this.buf，只是因为中间语言写成了两个变量
+    */
+    TaintHeap(newHeap, class),
+    VarPointsTo(newHeap, var) :-
+        IsTaintedFrom(insn, from, to),
+        VarPointsTo(heap, from),
+        TaintHeap(heap, _),
+        VarType(to, class),
+        newHeap = cat("TransferTaint::", insn),
+        VarPointsTo(oldHeap, to),
+        AssignHeapAllocation(_, _, oldHeap, var, _, _).
 }

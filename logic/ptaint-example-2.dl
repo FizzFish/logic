@@ -4,7 +4,7 @@
 
 .decl EntryMethod(method:Method)
 
-EntryMethod("<org.apache.commons.text.StringSubstitutor: java.lang.String replace(java.lang.Object)>").
+EntryMethod("<org.apache.commons.text.StringSubstitutor: java.lang.String replace(java.lang.String)>").
 
 
 ptaint.Reachable(method) :-
@@ -26,12 +26,15 @@ ptaint.VarPointsTo(taintHeap, param) :-
 
 
 ptaint.SourceMethod("<com.bytecodedl.benchmark.demo.TaintDemo3: java.lang.String Source()>").
-ptaint.SinkMethod("<com.bytecodedl.benchmark.demo.TaintDemo3: void Sink(java.lang.String)>", 0).
+ptaint.SinkMethod("<javax.script.ScriptEngine: java.lang.Object eval(java.lang.String)>", 0).
 
 ptaint.BaseToRetTransfer("<java.lang.StringBuilder: java.lang.StringBuilder append(java.lang.String)>").
 ptaint.BaseToRetTransfer("<java.lang.StringBuilder: java.lang.String toString()>").
 
+ptaint.BaseToArgTransfer("<java.lang.String: void getChars(int,int,char[],int)>", 2).
+
 ptaint.ArgToRetTransfer("<java.lang.StringBuilder: java.lang.StringBuilder append(java.lang.String)>", 0).
+ptaint.ArgToBaseTransfer("<java.lang.String: void <init>(char[],int,int)>", 0).
 
 ptaint.SanitizeMethod("<com.bytecodedl.benchmark.demo.TaintDemo3: java.lang.String Sanitize(java.lang.String)>").
 
@@ -43,6 +46,10 @@ TaintVar(var, heap) :-
     ptaint.TaintHeap(heap, _).
 
 .output TaintVar
+.output ptaint.TaintTransfer
+.output ptaint.IsTaintedFrom
+.output ptaint.InstanceFieldPointsTo
+.output ptaint.OVCallGraph
 
 .output ptaint.TaintHeap
 .output ptaint.VarPointsTo

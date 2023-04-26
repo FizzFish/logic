@@ -85,9 +85,14 @@
         NormalHeap(baseHeap, class),
         MethodInfo(method, simplename, _, _, _, descriptor, _),
         Dispatch(simplename, descriptor, class, callee).
+
+    // 缺乏一个条件： method.contains("java.lang" | "javax")
     OVCallGraph(insn, caller, method) :-
         Reachable(caller),
-        VirtualMethodInvocation(insn, _, method, _, caller).
+        (
+            VirtualMethodInvocation(insn, _, method, _, caller);
+            SpecialMethodInvocation(insn, _, method, _, caller)
+        ).
     // param
     VarPointsTo(heap, param) :- 
         CallGraph(insn, _, callee),
