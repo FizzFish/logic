@@ -103,7 +103,7 @@
     */
     /**
     存在一个问题：
-    1. x = new();y=x;taint(y) 这时显然不应该污染x
+    1. x = new();y=x;taint(y) 如果x是基本数据类型,这时显然不应该污染x
     2. this.buf = new();stack=this.buf;taint(stack) 这时需要污染this.buf，只是因为中间语言写成了两个变量
     */
     TaintHeap(newHeap, class),

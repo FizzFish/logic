@@ -33,6 +33,20 @@
         LoadInstanceField(_, _, to, base, field, method),
         VarPointsTo(baseHeap, base),
         InstanceFieldPointsTo(heap, baseHeap, field).
+
+    // may introduce new class <clinit>
+    Reachable(clinit) :-
+        Reachable(method),
+        LoadStaticField(_, _, _, field, method),
+        FieldInfo(field, decls, _, _),
+        MethodInfo(clinit, "<clinit>", _, decls, _, _, _).
+
+    Reachable(clinit) :-
+        Reachable(caller),
+        StaticMethodInvocation(_, _, callee, caller),
+        MethodInfo(callee, _, _, decls, _, _, _),
+        MethodInfo(clinit, "<clinit>", _, decls, _, _, _).
+
     
     // store field
     InstanceFieldPointsTo(heap, baseHeap, field) :-

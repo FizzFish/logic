@@ -3,19 +3,23 @@
 .init ptaint = PTaint
 
 .decl EntryMethod(method:Method)
+.decl InitMethod(method:Method)
 
 EntryMethod("<org.apache.commons.text.StringSubstitutor: java.lang.String replace(java.lang.String)>").
+InitMethod("<org.apache.commons.text.StringSubstitutor: org.apache.commons.text.StringSubstitutor createInterpolator()>").
 
+ptaint.Reachable(method) :-
+    InitMethod(method).
 
 ptaint.Reachable(method) :-
     EntryMethod(method).
 
-NormalHeap(heap, class),
 ptaint.VarPointsTo(heap, this) :-
     ThisVar(method, this),
     EntryMethod(method),
-    VarType(this, class),
-    heap = cat("Mock::", class).
+    Return(_, _, var, init),
+    InitMethod(init),
+    ptaint.VarPointsTo(heap, var).
 
 ptaint.TaintHeap(taintHeap, class),
 ptaint.VarPointsTo(taintHeap, param) :-
@@ -50,6 +54,8 @@ TaintVar(var, heap) :-
 .output ptaint.IsTaintedFrom
 .output ptaint.InstanceFieldPointsTo
 .output ptaint.OVCallGraph
+.output ptaint.Reachable
+.output ptaint.CallGraph
 
 .output ptaint.TaintHeap
 .output ptaint.VarPointsTo
